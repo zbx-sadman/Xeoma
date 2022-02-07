@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2022-02-07T11:38:15Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template APP Xeoma Server</template>
+            <name>Template APP Xeoma Server</name>
+            <description>Requirements: &#13;
+1) Zabbix v4.2.5 and above (full DukTape support need for preprocessing, v5.0.19 is OK);&#13;
+2) CLI Curl utility - put into zabbix_agentd.conf line UserParameter=xeoma[*],curl -s &quot;http://localhost:10090/api?login=$1&amp;password=$2&amp;$3&quot; ;&#13;
+3) Xeoma Server with &quot;Pro&quot; license installed.</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Xeoma API</name>
+                </application>
+                <application>
+                    <name>Xeoma cameras</name>
+                </application>
+                <application>
+                    <name>Xeoma system</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Xeoma|API port state</name>
+                    <key>net.tcp.listen[{$XEOMA_API_PORT}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Xeoma API</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Xeoma|API service state</name>
+                    <key>net.tcp.service[http,,{$XEOMA_API_PORT}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Xeoma API</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(#3)}=0</expression>
+                            <name>Xeoma|API service is down on {HOST.NAME}</name>
+                            <priority>AVERAGE</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Xeoma|CPU utilization</name>
+                    <key>proc.cpu.util[xeoma]</key>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <applications>
+                        <application>
+                            <name>Xeoma system</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$CPU.UTIL.CRIT}</expression>
+                            <name>Xeoma|High CPU utilization (over {$CPU.UTIL.CRIT}% for 5m) on {HOST.NAME}</name>
+                            <priority>WARNING</priority>
+                            <description>Xeoma process caused high CPU utilization.</description>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Xeoma|Memory usage</name>
+                    <key>proc.mem[xeoma]</key>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>b</units>
+                    <applications>
+                        <application>
+                            <name>Xeoma system</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$MEMORY.UTIL.MAX}</expression>
+                            <name>Xeoma|High memory utilization (&gt;{$MEMORY.UTIL.MAX}% for 5m) on {HOST.NAME}</name>
+                            <priority>AVERAGE</priority>
+                            <description>Xeoma process is running out of free memory.</description>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Xeoma|Camera Active Archive streams</name>
+                    <type>DEPENDENT</type>
+                    <key>xeoma[UniversalCamera,stat,ActiveArchiveStreams]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Xeoma cameras</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ActiveArchiveStreams</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Xeoma|Camera Active Audio streams</name>
+                    <type>DEPENDENT</type>
+                    <key>xeoma[UniversalCamera,stat,ActiveAudioStreams]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Xeoma cameras</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ActiveAudioStreams</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Xeoma|Camera Active</name>
+                    <type>DEPENDENT</type>
+                    <key>xeoma[UniversalCamera,stat,ActiveCameras]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Xeoma cameras</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ActiveCameras</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Xeoma|Camera Active Preview streams</name>
+                    <type>DEPENDENT</type>
+                    <key>xeoma[UniversalCamera,stat,ActivePreviewStreams]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Xeoma cameras</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ActivePreviewStreams</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Xeoma|Camera Total</name>
+                    <type>DEPENDENT</type>
+                    <key>xeoma[UniversalCamera,stat,TotalCameras]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Xeoma cameras</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.TotalCameras</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Xeoma|Camera statistic root item</name>
+                    <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=]</key>
+                    <history>0</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Xeoma cameras</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>   var jsd=JSON.parse(value); 
+   var nar=0,nau=0,npr=0,auc=0,toc=0;
+   for (var idx in jsd){       
+     for (var key in jsd[idx]){
+       if (key.startsWith('UniversalCamera')) { 
+          aar=('true'===jsd[idx][key]['ArchiveStream'])?1:0;
+          aau=('true'===jsd[idx][key]['AudioStream'])?1:0; 
+          apr=('true'===jsd[idx][key]['PreviewStream'])?1:0; 
+          nar+=aar;
+          nau+=aau; 
+          npr+=apr; 
+          auc+=(aar||aau||apr);
+          toc++;
+       }
+     }
+   }
+   return '{&quot;TotalCameras&quot;:'+toc+',&quot;ActiveCameras&quot;:'+auc+',&quot;ActiveArchiveStreams&quot;:'+nar+',&quot;ActiveAudioStreams&quot;:'+nau+',&quot;ActivePreviewStreams&quot;:'+npr+'}';</params>
+                        </step>
+                    </preprocessing>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Xeoma Archives</name>
+                    <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},archivestatistic=,lld]</key>
+                    <delay>5m</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Xeoma|Archive &quot;{#ARCHIVE_NAME}&quot; size</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#ARCHIVE_NAME},archive_size]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>b</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Xeoma archives</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.archive_size</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},&quot;archivestatistic={#ARCHIVE_NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Archive &quot;{#ARCHIVE_NAME}&quot; available free space</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#ARCHIVE_NAME},available_free_space]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>b</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Xeoma archives</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.available_free_space</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},&quot;archivestatistic={#ARCHIVE_NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Archive &quot;{#ARCHIVE_NAME}&quot; average size per day</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#ARCHIVE_NAME},average_size_day]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>b</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Xeoma archives</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.average_size_day</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},&quot;archivestatistic={#ARCHIVE_NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Archive &quot;{#ARCHIVE_NAME}&quot; saved days</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#ARCHIVE_NAME},day_total]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <status>DISABLED</status>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Xeoma archives</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.day_total</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},&quot;archivestatistic={#ARCHIVE_NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Archive &quot;{#ARCHIVE_NAME}&quot; saved time</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#ARCHIVE_NAME},size_in_seconds]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Xeoma archives</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.size_in_seconds</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},&quot;archivestatistic={#ARCHIVE_NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Archive &quot;{#ARCHIVE_NAME}&quot; root item</name>
+                            <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},&quot;archivestatistic={#ARCHIVE_NAME}&quot;]</key>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Xeoma archives</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.first()</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                    </item_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <name>Xeoma|Archive &quot;{#ARCHIVE_NAME}&quot; statistic</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>2196F3</color>
+                                    <calc_fnc>MAX</calc_fnc>
+                                    <item>
+                                        <host>Template APP Xeoma Server</host>
+                                        <key>xeoma[{#ARCHIVE_NAME},archive_size]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>7E57C2</color>
+                                    <calc_fnc>MAX</calc_fnc>
+                                    <item>
+                                        <host>Template APP Xeoma Server</host>
+                                        <key>xeoma[{#ARCHIVE_NAME},average_size_day]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>78909C</color>
+                                    <yaxisside>RIGHT</yaxisside>
+                                    <calc_fnc>MAX</calc_fnc>
+                                    <item>
+                                        <host>Template APP Xeoma Server</host>
+                                        <key>xeoma[{#ARCHIVE_NAME},size_in_seconds]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
+                    <lld_macro_paths>
+                        <lld_macro_path>
+                            <lld_macro>{#ARCHIVE_NAME}</lld_macro>
+                            <path>$.archive_name</path>
+                        </lld_macro_path>
+                    </lld_macro_paths>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$[?(@.archive_name =~ &quot;.*(?&lt;![.]lq)$&quot;)]</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Xeoma Universal Cameras</name>
+                    <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=,UniversalCamera,lld]</key>
+                    <delay>5m</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Xeoma|Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; Archive stream state</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#UNIVERSAL_CAMERA_ID},ArchiveStream]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <applications>
+                                <application>
+                                    <name>Xeoma cameras</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.ArchiveStream</params>
+                                </step>
+                                <step>
+                                    <type>BOOL_TO_DECIMAL</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=,{#UNIVERSAL_CAMERA_ID}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; Audio stream state</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#UNIVERSAL_CAMERA_ID},AudioStream]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <applications>
+                                <application>
+                                    <name>Xeoma cameras</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.AudioStream</params>
+                                </step>
+                                <step>
+                                    <type>BOOL_TO_DECIMAL</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=,{#UNIVERSAL_CAMERA_ID}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; Preview stream state</name>
+                            <type>DEPENDENT</type>
+                            <key>xeoma[{#UNIVERSAL_CAMERA_ID},PreviewStream]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <applications>
+                                <application>
+                                    <name>Xeoma cameras</name>
+                                </application>
+                            </applications>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Xeoma universal cameras</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.PreviewStream</params>
+                                </step>
+                                <step>
+                                    <type>BOOL_TO_DECIMAL</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=,{#UNIVERSAL_CAMERA_ID}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Xeoma|Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; root item</name>
+                            <key>xeoma[{$XEOMA_USER},{$XEOMA_PASS},sourcesinfo=,{#UNIVERSAL_CAMERA_ID}]</key>
+                            <history>0</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>Xeoma cameras</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@[&quot;{#UNIVERSAL_CAMERA_ID}&quot;])].[&quot;{#UNIVERSAL_CAMERA_ID}&quot;].first()</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                    </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{Template APP Xeoma Server:xeoma[{#UNIVERSAL_CAMERA_ID},ArchiveStream].max(#3)}&lt;1 and {Template APP Xeoma Server:xeoma[{#UNIVERSAL_CAMERA_ID},PreviewStream].max(#3)}=1</expression>
+                            <name>Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; Archive stream is not used</name>
+                            <priority>INFO</priority>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{Template APP Xeoma Server:xeoma[{#UNIVERSAL_CAMERA_ID},ArchiveStream].max(#3)}&lt;1 and {Template APP Xeoma Server:xeoma[{#UNIVERSAL_CAMERA_ID},PreviewStream].max(#3)}&lt;1</expression>
+                            <name>Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; malfunction or wrong module(s) settings detected</name>
+                            <priority>WARNING</priority>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{Template APP Xeoma Server:xeoma[{#UNIVERSAL_CAMERA_ID},ArchiveStream].max(#3)}=1 and {Template APP Xeoma Server:xeoma[{#UNIVERSAL_CAMERA_ID},PreviewStream].max(#3)}&lt;1</expression>
+                            <name>Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; Preview stream is not used</name>
+                            <priority>INFO</priority>
+                        </trigger_prototype>
+                    </trigger_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <name>Xeoma|Camera &quot;{#UNIVERSAL_CAMERA_NAME}&quot; state</name>
+                            <type>STACKED</type>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>1A7C11</color>
+                                    <calc_fnc>MAX</calc_fnc>
+                                    <item>
+                                        <host>Template APP Xeoma Server</host>
+                                        <key>xeoma[{#UNIVERSAL_CAMERA_ID},ArchiveStream]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>B75F11</color>
+                                    <calc_fnc>MAX</calc_fnc>
+                                    <item>
+                                        <host>Template APP Xeoma Server</host>
+                                        <key>xeoma[{#UNIVERSAL_CAMERA_ID},AudioStream]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>2774A4</color>
+                                    <calc_fnc>MAX</calc_fnc>
+                                    <item>
+                                        <host>Template APP Xeoma Server</host>
+                                        <key>xeoma[{#UNIVERSAL_CAMERA_ID},PreviewStream]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>   var jsd=JSON.parse(value); 
+   var fst=true;
+   var lld='[';
+   for (var idx in jsd){       
+     lld+=(fst?'':',') + '{';
+     fst=false;
+     for (var key in jsd[idx]){
+       if (key.startsWith('UniversalCamera')) { lld+='&quot;{#UNIVERSAL_CAMERA_ID}&quot;:&quot;'+key+'&quot;,'; }
+     }
+     lld+='&quot;{#UNIVERSAL_CAMERA_NAME}&quot;:&quot;'+ jsd[idx].previewName+'&quot;}';
+   }
+   lld+=']';
+   return lld;</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$CPU.UTIL.CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$MEMORY.UTIL.MAX}</macro>
+                    <value>3Gb</value>
+                </macro>
+                <macro>
+                    <macro>{$XEOMA_API_HOST}</macro>
+                    <value>localhost</value>
+                </macro>
+                <macro>
+                    <macro>{$XEOMA_API_PORT}</macro>
+                    <value>10090</value>
+                </macro>
+                <macro>
+                    <macro>{$XEOMA_PASS}</macro>
+                    <value>-set-password-on-host-level-</value>
+                </macro>
+                <macro>
+                    <macro>{$XEOMA_USER}</macro>
+                    <value>-set-username-on-host-level-</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <graphs>
+        <graph>
+            <name>Cameras statistic</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>90CAF9</color>
+                    <calc_fnc>MAX</calc_fnc>
+                    <item>
+                        <host>Template APP Xeoma Server</host>
+                        <key>xeoma[UniversalCamera,stat,TotalCameras]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <drawtype>BOLD_LINE</drawtype>
+                    <color>673AB7</color>
+                    <calc_fnc>MAX</calc_fnc>
+                    <item>
+                        <host>Template APP Xeoma Server</host>
+                        <key>xeoma[UniversalCamera,stat,ActiveCameras]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>1A7C11</color>
+                    <calc_fnc>MAX</calc_fnc>
+                    <item>
+                        <host>Template APP Xeoma Server</host>
+                        <key>xeoma[UniversalCamera,stat,ActiveArchiveStreams]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>4</sortorder>
+                    <color>B75F11</color>
+                    <calc_fnc>MAX</calc_fnc>
+                    <item>
+                        <host>Template APP Xeoma Server</host>
+                        <key>xeoma[UniversalCamera,stat,ActiveAudioStreams]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>5</sortorder>
+                    <color>F06292</color>
+                    <calc_fnc>MAX</calc_fnc>
+                    <item>
+                        <host>Template APP Xeoma Server</host>
+                        <key>xeoma[UniversalCamera,stat,ActivePreviewStreams]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
+</zabbix_export>
